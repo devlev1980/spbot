@@ -147,7 +147,7 @@ function findMovie(userId, movieTitle) {
           rating: movieObj.imdbRating,
           poster_url:movieObj.Poster
         };
-        var options = {upsert: true};
+        // var options = {upsert: true};
         Movie.findOneAndUpdate(query, update, options, function(err, mov) {
           if (err) {
             console.log("Database error: " + err);
