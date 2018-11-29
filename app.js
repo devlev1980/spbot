@@ -4,6 +4,7 @@ var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 
 
+
 // var db = mongoose.connect(process.env.MONGODB_URI);
 // var db = mongoose.connect(process.env.MONGODB_URI);
 var mongodbUri ='mongodb://@ds225543.mlab.com:25543/questions';
@@ -29,11 +30,11 @@ var app = express();
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-app.listen((process.env.PORT || 8000));
+app.listen((process.env.PORT || 5000));
 
 // Server index page
 app.get("/", function (req, res) {
-  res.send("Deployed!");
+  res.send("Server run!");
 });
 
 // Facebook Webhook
@@ -188,7 +189,7 @@ function findMovie(userId, movieTitle) {
 function getMovieDetail(userId, field) {
   Movie.findOne({user_id: userId}, function(err, movie) {
     if(err) {
-      sendMessage(userId, {text: "Something went wrong. Try again",},err.toString());
+      sendMessage(userId, {text: "Something went wrong. Try again",});
     } else {
       sendMessage(userId, {text: movie[field]});
     }
