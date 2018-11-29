@@ -8,6 +8,7 @@ var db = mongoose.connect(process.env.MONGODB_URI);
 var Movie = require("./models/movie");
 
 var app = express();
+
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.listen((process.env.PORT || 5000));
@@ -112,7 +113,7 @@ function processMessage(event) {
 }
 function findMovie(userId, movieTitle) {
   request("http://www.omdbapi.com/?type=movie&amp;t=" + movieTitle, function (error, response, body) {
-    if (!error &amp;&amp; response.statusCode === 200) {
+    if (!error && response.statusCode === 200) {
       var movieObj = JSON.parse(body);
       if (movieObj.Response === "True") {
         var query = {user_id: userId};
