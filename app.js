@@ -6,9 +6,9 @@ var mongoose = require("mongoose");
 
 // var db = mongoose.connect(process.env.MONGODB_URI);
 // var db = mongoose.connect(process.env.MONGODB_URI);
-// var mongodbUri ='mongodb://@ds225543.mlab.com:25543/questions';
+var mongodbUri ='mongodb://@ds225543.mlab.com:25543/questions';
 
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(mongodbUri, {
   useNewUrlParser: true,
   auth: {
     user: 'yevgenyl',
@@ -188,7 +188,7 @@ function findMovie(userId, movieTitle) {
 function getMovieDetail(userId, field) {
   Movie.findOne({user_id: userId}, function(err, movie) {
     if(err) {
-      sendMessage(userId, {text: "Something went wrong. Try again",err});
+      sendMessage(userId, {text: "Something went wrong. Try again",},err.toString());
     } else {
       sendMessage(userId, {text: movie[field]});
     }
