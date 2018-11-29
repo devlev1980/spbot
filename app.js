@@ -3,8 +3,9 @@ var request = require("request");
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 
-// var db = mongoose.connect(process.env.MONGODB_URI);
-// var Movie = require("./models/movie");
+
+var db = mongoose.connect(process.env.MONGODB_URI);
+var Movie = require("./models/movie");
 
 var app = express();
 app.use(bodyParser.urlencoded({extended: false}));
@@ -39,6 +40,8 @@ app.post("/webhook", function (req, res) {
       entry.messaging.forEach(function(event) {
         if (event.postback) {
           processPostback(event);
+        } else if (event.message) {
+          processMessage(event);
         }
       });
     });
@@ -46,6 +49,42 @@ app.post("/webhook", function (req, res) {
     res.sendStatus(200);
   }
 });
+
+function processMessage(event) {
+  if (!event.message.is_echo) {
+    var message = event.message;
+    var senderId = event.sender.id;
+
+    console.log("Received message from senderId: " + senderId);
+    console.log("Message is: " + JSON.stringify(message));
+
+    // You may get a text or attachment but not both
+    if (message.text) {
+      var formattedMsg = message.text.toLowerCase().trim();
+
+      // If we receive a text message, check to see if it matches any special
+      // keywords and send back the corresponding movie detail.
+      // Otherwise, search for new movie.
+      switch (formattedMsg) {
+        case "plot":
+        case "date":
+        case "runtime":
+        case "director":
+        case "cast":
+        case "rating":
+          getMovieDetail(senderId, formattedMsg);
+          break;
+
+        default:
+          findMovie(senderId, formattedMsg);
+      }
+    } else if (message.attachments) {
+      sendMessage(senderId, {text: "Sorry, I don't understand your request."});
+    }
+  }
+}
+
+
 
 function processPostback(event) {
   var senderId = event.sender.id;
