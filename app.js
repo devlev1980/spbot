@@ -4,14 +4,32 @@ var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 
 
-var db = mongoose.connect(process.env.MONGODB_URI);
+// var db = mongoose.connect(process.env.MONGODB_URI);
+// var db = mongoose.connect(process.env.MONGODB_URI);
+// var mongodbUri ='mongodb://@ds225543.mlab.com:25543/questions';
+
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  auth: {
+    user: 'yevgenyl',
+    password: 'papa2207'
+  }
+});
+
+var conn = mongoose.connection;
+conn.on('error', console.error.bind(console, 'connection error:'));
+
+conn.once('open', () =>{
+  console.log('connected to database')
+});
+
 var Movie = require("./models/movie");
 
 var app = express();
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-app.listen((process.env.PORT || 5000));
+app.listen((process.env.PORT || 8000));
 
 // Server index page
 app.get("/", function (req, res) {
@@ -170,7 +188,7 @@ function findMovie(userId, movieTitle) {
 function getMovieDetail(userId, field) {
   Movie.findOne({user_id: userId}, function(err, movie) {
     if(err) {
-      sendMessage(userId, {text: "Something went wrong. Try again"},err);
+      sendMessage(userId, {text: "Something went wrong. Try again",err});
     } else {
       sendMessage(userId, {text: movie[field]});
     }
