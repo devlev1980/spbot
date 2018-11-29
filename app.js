@@ -1,6 +1,10 @@
 var express = require("express");
 var request = require("request");
 var bodyParser = require("body-parser");
+var mongoose = require("mongoose");
+
+var db = mongoose.connect(process.env.MONGODB_URI);
+var Movie = require("./models/movie");
 
 var app = express();
 app.use(bodyParser.urlencoded({extended: false}));
@@ -45,40 +49,6 @@ app.post("/webhook", function (req, res) {
   }
 });
 
-function processMessage(event) {
-  if (!event.message.is_echo) {
-    var message = event.message;
-    var senderId = event.sender.id;
-
-    console.log("Received message from senderId: " + senderId);
-    console.log("Message is: " + JSON.stringify(message));
-
-    // You may get a text or attachment but not both
-    if (message.text) {
-      var formattedMsg = message.text.toLowerCase().trim();
-
-      // If we receive a text message, check to see if it matches any special
-      // keywords and send back the corresponding movie detail.
-      // Otherwise, search for new movie.
-      switch (formattedMsg) {
-        case "plot":
-        case "date":
-        case "runtime":
-        case "director":
-        case "cast":
-        case "rating":
-          getMovieDetail(senderId, formattedMsg);
-          break;
-
-        default:
-          findMovie(senderId, formattedMsg);
-      }
-    } else if (message.attachments) {
-      sendMessage(senderId, {text: "Sorry, I don't understand your request."});
-    }
-  }
-}
-
 function processPostback(event) {
   var senderId = event.sender.id;
   var payload = event.postback.payload;
@@ -99,26 +69,56 @@ function processPostback(event) {
         console.log("Error getting user's name: " +  error);
       } else {
         var bodyObj = JSON.parse(body);
-        var name = bodyObj.first_name;
+        name = bodyObj.first_name;
         greeting = "Hi " + name + ". ";
       }
-      var message = greeting + "My name is Elad FaceBot. You can ask me a questions and i'll be back to you with the answer";
+      var message = greeting + "My name is SP Movie Bot. I can tell you various details regarding movies. What movie would you like to know about?";
       sendMessage(senderId, {text: message});
     });
+  } else if (payload === "Correct") {
+    sendMessage(senderId, {text: "Awesome! What would you like to find out? Enter 'plot', 'date', 'runtime', 'director', 'cast' or 'rating' for the various details."});
+  } else if (payload === "Incorrect") {
+    sendMessage(senderId, {text: "Oops! Sorry about that. Try using the exact title of the movie"});
   }
 }
-function getMovieDetail(userId, field) {
-  Movie.findOne({user_id: userId}, function(err, movie) {
-    if(err) {
-      sendMessage(userId, {text: "Something went wrong. Try again"});
-    } else {
-      sendMessage(userId, {text: movie[field]});
+
+function processMessage(event) {
+  if (!event.message.is_echo) {
+    var message = event.message;
+    var senderId = event.sender.id;
+
+    console.log("Received message from senderId: " + senderId);
+    console.log("Message is: " + JSON.stringify(message));
+
+    // You may get a text or attachment but not both
+    if (message.text) {
+      var formattedMsg = message.text.toLowerCase().trim();
+
+      // If we receive a text message, check to see if it matches any special
+      // keywords and send back the corresponding movie detail.
+      // Otherwise search for new movie.
+      switch (formattedMsg) {
+        case "plot":
+        case "date":
+        case "runtime":
+        case "director":
+        case "cast":
+        case "rating":
+          getMovieDetail(senderId, formattedMsg);
+          break;
+
+        default:
+          findMovie(senderId, formattedMsg);
+      }
+    } else if (message.attachments) {
+      sendMessage(senderId, {text: "Sorry, I don't understand your request."});
     }
-  });
+  }
 }
+
 function findMovie(userId, movieTitle) {
-  request("http://www.omdbapi.com/?type=movie&amp;t=" + movieTitle, function (error, response, body) {
-    if (!error &amp;&amp; response.statusCode === 200) {
+  request("http://www.omdbapi.com/?type=movie&t=" + movieTitle, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
       var movieObj = JSON.parse(body);
       if (movieObj.Response === "True") {
         var query = {user_id: userId};
@@ -169,6 +169,16 @@ function findMovie(userId, movieTitle) {
       }
     } else {
       sendMessage(userId, {text: "Something went wrong. Try again."});
+    }
+  });
+}
+
+function getMovieDetail(userId, field) {
+  Movie.findOne({user_id: userId}, function(err, movie) {
+    if(err) {
+      sendMessage(userId, {text: "Something went wrong. Try again"});
+    } else {
+      sendMessage(userId, {text: movie[field]});
     }
   });
 }
