@@ -98,6 +98,11 @@ function processPostback(event) {
       sendMessage(senderId, {text: message});
     });
   }
+  else if (payload === "Correct") {
+    sendMessage(senderId, {text: "Awesome! What would you like to find out? Enter 'plot', 'date', 'runtime', 'director', 'cast' or 'rating' for the various details."});
+  } else if (payload === "Incorrect") {
+    sendMessage(senderId, {text: "Oops! Sorry about that. Try using the exact title of the movie"});
+  }
 }
 function processMessage(event) {
   if (!event.message.is_echo) {
